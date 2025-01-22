@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Compression - CompressorWiz</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            margin: 50px auto;
+            max-width: 600px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1.5s ease-in-out;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #00e1ff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        p {
+            font-size: 1rem;
+            margin: 10px 0;
+        }
+
+        input[type="file"], input[type="number"] {
+            margin: 15px 0;
+            padding: 10px;
+            background: #444;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            width: 90%;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="file"]:hover, input[type="number"]:hover {
+            background: #555;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #00e1ff, #0077ff);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #ffdf00;
+        }
+
+        .loader {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CompressorWiz</h1>
+        <p>Select a file to compress:</p>
+        <form id="uploadForm" action="/compress" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <br>
+            <label for="level">Compression Level (0-9):</label>
+            <input type="number" name="level" id="level" min="0" max="9" value="5" required>
+            <br><br>
+            <button type="submit">Compress</button>
+        </form>
+        <div class="loader" id="loader"></div>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const result = document.getElementById('result');
+        const loader = document.getElementById('loader');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            result.textContent = '';
+            loader.style.display = 'block';
+
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/compress', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                loader.style.display = 'none';
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = 'compressed_file.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    result.textContent = 'File compressed successfully!';
+                } else {
+                    const errorText = await response.text();
+                    result.textContent = `Error: ${errorText}`;
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                result.textContent = `An error occurred: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
